@@ -1,13 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Home, ArrowLeft, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Groq from 'groq-sdk';
 import { saveLead } from '../store';
-
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
+import { sendChatMessage } from '../chatApi';
 
 // Track what info we've collected from the conversation
 const extractLeadInfo = (messages) => {
@@ -103,21 +98,15 @@ export default function EnquiryPage() {
     setIsLoading(true);
 
     try {
-      const response = await groq.chat.completions.create({
-        messages: [
+      const reply = await sendChatMessage([
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages,
           userMessage,
-        ],
-        model: 'llama3-8b-8192',
-        temperature: 0.85,
-        max_tokens: 400,
-      });
+        ]);
 
       const botMessage = {
         role: 'assistant',
-        content:
-          response.choices[0]?.message?.content ||
+        content: reply ||
           "Hmm, I'm having a bit of trouble on my end right now. Mind trying again in a second?",
       };
       setMessages((prev) => [...prev, botMessage]);

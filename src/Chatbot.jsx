@@ -1,12 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Loader2 } from 'lucide-react';
-import Groq from 'groq-sdk';
-
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true 
-});
+import { sendChatMessage } from './chatApi';
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,21 +30,18 @@ export default function Chatbot() {
     setIsLoading(true);
 
     try {
-      const response = await groq.chat.completions.create({
-        messages: [
+      const reply = await sendChatMessage([
           {
             role: 'system',
             content: 'You are a luxury real estate AI assistant for Elite Estates in Nigeria. You help clients find high-end residential properties in places like Ikoyi, Victoria Island, Banana Island, and Maitama. Be extremely polite, professional, and concise. Your goal is to guide high-net-worth individuals towards finding their dream home or investment property.'
           },
           ...messages,
           userMessage
-        ],
-        model: 'llama3-8b-8192',
-      });
+        ]);
 
       const botMessage = {
         role: 'assistant',
-        content: response.choices[0]?.message?.content || 'I apologize, but I am having trouble connecting right now.'
+        content: reply || 'I apologize, but I am having trouble connecting right now.'
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
